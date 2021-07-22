@@ -4,7 +4,6 @@ const router = express.Router();
 
 //localhost:5000/gerentes
 router.get('/',getGerentes);
-//router.get(':id',findById)
 router.post('/',createGerentes);
 router.patch('/:id',updateGerente);
 router.delete('/:id',deleteGerente);
