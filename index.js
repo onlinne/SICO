@@ -5,6 +5,8 @@ import cors from 'cors';
 import gerentesRoutes from './routes/gerentes.js'
 import ventasClosetRoutes from './routes/ventasCloset.js'
 import clientesClosetRoutes from './routes/clientesCloset.js'
+import clienteSeguroRoutes from './routes/clientesSeguros.js'
+import ventasSeguroRoutes from './routes/ventasSeguros.js'
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(cors());
 app.use('/gerentes', gerentesRoutes);
 app.use('/ventascloset', ventasClosetRoutes);
 app.use('/clientescloset', clientesClosetRoutes);
+app.use('/clientesseguro', clienteSeguroRoutes);
+app.use('/ventasseguro', ventasSeguroRoutes);
 
 //const CONNECTION_URL = "mongodb://localhost:27017/sicodb";
 const PORT = process.env.PORT || 5000;
