@@ -5,7 +5,7 @@ const router = express.Router();
 const {body} = pkg;
 
 router.get('/',getClientesSeguro);
-router.post('/', body('correo').isEmail(), createClienteSeguro);
-router.patch('/:id', updateClienteSeguro);
+router.post('/', body("cedula").isNumeric({no_symbols:true}),body("telefono").isNumeric({no_symbols:true}),body('correo').isEmail(), createClienteSeguro);
+router.patch('/:id',body("telefono").isNumeric({no_symbols:true}),body("correo").isEmail(), updateClienteSeguro);
 
 export default router;

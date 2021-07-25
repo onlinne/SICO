@@ -20,7 +20,7 @@ const SchemaVentaCloset=new mongoose.Schema({
     },
     registrada:{
         type: Date,
-        default: new Date()
+        required: true
     }
 });
 const NuevaVentaCloset = mongoose.model('NuevaVentaCloset',SchemaVentaCloset);

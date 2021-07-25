@@ -41,9 +41,9 @@ export const createGerentes = async (req,res) =>{
 
 export const updateGerente = async (req,res) =>{
     const {id: _id} = req.params;
-    const {cedula,nombre,contrasenia} = req.body;
+    const {contrasenia} = req.body;
     if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('El gerente no existe');
-    const updatedGerente = await NuevoGerente.findByIdAndUpdate(_id, {cedula,nombre,contrasenia}, {new: true});
+    const updatedGerente = await NuevoGerente.findByIdAndUpdate(_id, {contrasenia}, {new: true});
     res.json(updatedGerente)
 }
 
