@@ -12,7 +12,10 @@ export const getVentasSeguro = async(req, res) =>{
 
 export const createVentasSeguro = async (req,res) =>{
     const {fechaVenta,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta} = req.body;
-
+    const errors = validationResult(req);
+    if (!errors.isEmpty()){
+        return res.status(400).json({errors: errors.array()});
+    }
     try{
         // var fecha = new Date(fechaVenta);
         //  var anio = fecha.getFullYear();
@@ -37,6 +40,10 @@ export const createVentasSeguro = async (req,res) =>{
 export const updateVentasSeguro = async(req, res) =>{
     const {id: _id} = req.params;
     const {tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta} = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()){
+        return res.status(400).json({errors: errors.array()});
+    }
     if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('El seguro no existe');
     const updateVenta = await NuevaVentaSeguro.findByIdAndUpdate(_id, {tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta}, {new:true});
     res.json(updateVenta)
