@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import NuevaVentaSeguro from '../models/VentaSeguro.js';
+import pkg from 'express-validator';
+const {body, validationResult} = pkg;
 
 export const getVentasSeguro = async(req, res) =>{
     try{
@@ -24,6 +26,7 @@ export const createVentasSeguro = async (req,res) =>{
         // const fechaExpiracion= new Date(anio+1,mes,dia);
         const fechaExpiracion = new Date(fechaVenta);
         fechaExpiracion.setFullYear(fechaExpiracion.getFullYear()+1);
+        fechaExpiracion.setHours(0,0,0,0);
         // fechaExpiracion.setMonth(fechaExpiracion.getMonth());
         // fechaExpiracion.setDate(fechaExpiracion.getDate());
         const alreadyInUse = await NuevaVentaSeguro.findOne({placaVehiculo})
@@ -34,6 +37,21 @@ export const createVentasSeguro = async (req,res) =>{
         res.status(201).json({creo})
     }catch(error){
         res.status(409).json({message: error.message});
+    }
+}
+
+export const getAllByExpire = async (req,res) =>{
+    const fechaHoy = new Date();
+    const fechaProxima = new Date();
+    fechaProxima.setDate(fechaHoy.getDate()+5);
+    fechaProxima.setHours(0,0,0,0);
+    console.log(fechaProxima);
+    try{
+        const seguroExpirado = await NuevaVentaSeguro.find({fechaExpiracion: fechaProxima});
+        console.log({fechaExpiracion: fechaProxima});
+        res.status(200).json(seguroExpirado);
+    }catch(error){
+        res.status(404).json({message: error.message});
     }
 }
 

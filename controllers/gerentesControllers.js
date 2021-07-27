@@ -8,12 +8,12 @@ const {body, validationResult} = pkg;
 export const getGerentes = async (req, res) =>{
     try{
         const gerentes = await NuevoGerente.find();
-        console.log(gerentes)
         res.status(200).json(gerentes);
     }catch(error){
         res.status(404).json({message: error.message});
     }
 }
+
 
 /*export const findById = async (req, res) =>{
     const {cedula,nombre,contrasenia} = req.body;

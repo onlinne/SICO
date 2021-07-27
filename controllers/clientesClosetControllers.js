@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import NuevoClienteCloset from '../models/ClienteCloset.js';
+import pkg from 'express-validator';
+const {body, validationResult} = pkg;
 
 export const getClientesCloset = async (req, res) =>{
     try{

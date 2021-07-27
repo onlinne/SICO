@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import NuevaVentaCloset from '../models/VentaCloset.js';
+import pkg from 'express-validator';
+const {body, validationResult} = pkg;
 
 export const getVentasCloset = async (req, res) =>{
     try{
