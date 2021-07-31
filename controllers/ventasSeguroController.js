@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 import NuevaVentaSeguro from '../models/VentaSeguro.js';
+import SeguroVencido from '../models/SegurosVencidos.js';
+//import { getSeguroVencido} from '../controllers/SegurosVencidosController.js';
+
 import pkg from 'express-validator';
 const {body, validationResult} = pkg;
 
@@ -19,16 +22,10 @@ export const createVentasSeguro = async (req,res) =>{
         return res.status(400).json({errors: errors.array()});
     }
     try{
-        // var fecha = new Date(fechaVenta);
-        //  var anio = fecha.getFullYear();
-        //  var mes = fecha.getMonth();
-        //  var dia = fecha.getDate(); 
-        // const fechaExpiracion= new Date(anio+1,mes,dia);
-        const fechaExpiracion = new Date(fechaVenta);
+        let fechaExpiracion = new Date(fechaVenta);
         fechaExpiracion.setFullYear(fechaExpiracion.getFullYear()+1);
         fechaExpiracion.setHours(0,0,0,0);
-        // fechaExpiracion.setMonth(fechaExpiracion.getMonth());
-        // fechaExpiracion.setDate(fechaExpiracion.getDate());
+        fechaExpiracion = fechaExpiracion.valueOf();
         const alreadyInUse = await NuevaVentaSeguro.findOne({placaVehiculo})
         if(alreadyInUse) return res.status(400).json({message:'El vehiculo ya cuenta con un seguro'});
         const creo = await NuevaVentaSeguro.create({
@@ -39,17 +36,51 @@ export const createVentasSeguro = async (req,res) =>{
         res.status(409).json({message: error.message});
     }
 }
+export const cambiarVencidos = async (req,res) =>{
+    let fechaHoy = new Date();
+    fechaHoy.setHours(0,0,0,0);
+    fechaHoy = fechaHoy.valueOf();
+    console.log(fechaHoy);
+    try{
+        const vencidos = await NuevaVentaSeguro.updateMany({fechaExpiracion: fechaHoy},{expiro:true});
+        res.status(200).json(vencidos);
+    }catch{
+        res.status(404).json({message: error.message});
+    }
+
+}
+
+export const segurosVencidos = async(req,res) =>{
+    try{
+        const vencidos = await NuevaVentaSeguro.find({expiro: true});
+        console.log(vencidos)
+        let crear;
+        for(const vencido of vencidos){
+            const crear = await SeguroVencido.create({fechaVenta:vencido.fechaVenta,fechaExpiracion:vencido.fechaExpiracion,tipoVehiculo:vencido.tipoVehiculo,placaVehiculo:vencido.placaVehiculo,cedulaCliente:vencido.cedulaCliente,valorVenta:vencido.valorVenta,expiro:vencido.expiro})
+            console.log(vencido.fechaVenta);
+            console.log(crear)
+        }
+        
+        const eliminar = await NuevaVentaSeguro.deleteMany({expiro:true});
+        res.status(200).json(vencidos);
+    }catch(error){
+        res.status(404).json({message: error.message});
+        console.log(error);
+    }
+}
 
 export const getAllByExpire = async (req,res) =>{
-    const fechaHoy = new Date();
-    const fechaProxima = new Date();
-    fechaProxima.setDate(fechaHoy.getDate()+5);
+    let dias = parseInt(req.params.dias);
+    let fecha = req.params.fecha;
+    let fechaRecibida = new Date(fecha);
+    let fechaProxima = new Date();
+    fechaProxima.setDate(fechaRecibida.getDate()+ (dias+1));
     fechaProxima.setHours(0,0,0,0);
-    console.log(fechaProxima);
+    fechaProxima = fechaProxima.valueOf();
     try{
         const seguroExpirado = await NuevaVentaSeguro.find({fechaExpiracion: fechaProxima});
-        console.log({fechaExpiracion: fechaProxima});
         res.status(200).json(seguroExpirado);
+
     }catch(error){
         res.status(404).json({message: error.message});
     }
@@ -66,9 +97,3 @@ export const updateVentasSeguro = async(req, res) =>{
     const updateVenta = await NuevaVentaSeguro.findByIdAndUpdate(_id, {tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta}, {new:true});
     res.json(updateVenta)
 }
-
-/*export const faltaTiempo = async(req,res)=>{
-    const {id: _id} = req.params;
-    const {fechaVenta} = req.body;
-    if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('El seguro no existe');
-}*/
