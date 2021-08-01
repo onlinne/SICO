@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import NuevaVentaSeguro from '../models/VentaSeguro.js';
 import SeguroVencido from '../models/SegurosVencidos.js';
-//import { getSeguroVencido} from '../controllers/SegurosVencidosController.js';
+import schedule from 'node-schedule';
+
 
 import pkg from 'express-validator';
 const {body, validationResult} = pkg;
@@ -36,36 +37,18 @@ export const createVentasSeguro = async (req,res) =>{
         res.status(409).json({message: error.message});
     }
 }
-export const cambiarVencidos = async (req,res) =>{
-    let fechaHoy = new Date();
-    fechaHoy.setHours(0,0,0,0);
-    fechaHoy = fechaHoy.valueOf();
-    console.log(fechaHoy);
-    try{
-        const vencidos = await NuevaVentaSeguro.updateMany({fechaExpiracion: fechaHoy},{expiro:true});
-        res.status(200).json(vencidos);
-    }catch{
-        res.status(404).json({message: error.message});
-    }
 
-}
-
-export const segurosVencidos = async(req,res) =>{
+const segurosVencidos = async(req,res) =>{
     try{
         const vencidos = await NuevaVentaSeguro.find({expiro: true});
-        console.log(vencidos)
         let crear;
         for(const vencido of vencidos){
             const crear = await SeguroVencido.create({fechaVenta:vencido.fechaVenta,fechaExpiracion:vencido.fechaExpiracion,tipoVehiculo:vencido.tipoVehiculo,placaVehiculo:vencido.placaVehiculo,cedulaCliente:vencido.cedulaCliente,valorVenta:vencido.valorVenta,expiro:vencido.expiro})
-            console.log(vencido.fechaVenta);
-            console.log(crear)
         }
-        
         const eliminar = await NuevaVentaSeguro.deleteMany({expiro:true});
-        res.status(200).json(vencidos);
+        return vencidos;
     }catch(error){
-        res.status(404).json({message: error.message});
-        console.log(error);
+        return error;
     }
 }
 
@@ -97,3 +80,36 @@ export const updateVentasSeguro = async(req, res) =>{
     const updateVenta = await NuevaVentaSeguro.findByIdAndUpdate(_id, {tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta}, {new:true});
     res.json(updateVenta)
 }
+
+//Automatizados 
+
+const cambiarVencidos = async (req,res) =>{
+    let fechaHoy = new Date();
+    fechaHoy.setHours(0,0,0,0);
+    fechaHoy = fechaHoy.valueOf();
+    console.log(fechaHoy);
+    try{
+        const vencidos = await NuevaVentaSeguro.updateMany({fechaExpiracion: fechaHoy},{expiro:true});
+    }catch(error){
+        return error;
+    }
+
+}
+
+//cada 3 horas 0 */3 * * *
+const job = schedule.scheduleJob('* * * * *',function(){
+    try{
+        const actualizacion = cambiarVencidos();
+        let vencidos = NuevaVentaSeguro.find({expiro: true});
+        console.log('los vencidos fueron actualizados');
+    if (vencidos != ''){
+        const cambio = segurosVencidos();
+        console.log('los seguros vencidos han sido retirados');
+        console.log(vencidos);
+        console.log('----------------------------------------------------------');
+    }
+    }catch(error){
+        return error;
+    }
+ 
+});
