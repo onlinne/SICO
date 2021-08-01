@@ -81,13 +81,20 @@ export const updateVentasSeguro = async(req, res) =>{
     res.json(updateVenta)
 }
 
-//Automatizados 
+//Automatizados
+const verVencidos = async(req,res) =>{
+    try{
+        const vencidos = await NuevaVentaSeguro.find({expiro: true});
+        return vencidos;
+    }catch(error){
+        return error;
+    }
+}
 
 const cambiarVencidos = async (req,res) =>{
     let fechaHoy = new Date();
     fechaHoy.setHours(0,0,0,0);
     fechaHoy = fechaHoy.valueOf();
-    console.log(fechaHoy);
     try{
         const vencidos = await NuevaVentaSeguro.updateMany({fechaExpiracion: fechaHoy},{expiro:true});
     }catch(error){
@@ -99,15 +106,12 @@ const cambiarVencidos = async (req,res) =>{
 //cada 3 horas 0 */3 * * *
 const job = schedule.scheduleJob('* * * * *',function(){
     try{
-        const actualizacion = cambiarVencidos();
-        let vencidos = NuevaVentaSeguro.find({expiro: true});
-        console.log('los vencidos fueron actualizados');
-    if (vencidos != ''){
-        const cambio = segurosVencidos();
-        console.log('los seguros vencidos han sido retirados');
-        console.log(vencidos);
-        console.log('----------------------------------------------------------');
-    }
+        cambiarVencidos();
+        verVencidos().then(vencidos => {
+            if(vencidos) {
+                segurosVencidos();
+            }
+        });
     }catch(error){
         return error;
     }
