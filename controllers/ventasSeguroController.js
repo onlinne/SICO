@@ -18,6 +18,10 @@ export const getVentasSeguro = async(req, res) =>{
 
 export const createVentasSeguro = async (req,res) =>{
     const {fechaVenta,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta} = req.body;
+    //const nuevafechaventa = new Date(fechaVenta);
+    //const año= nuevafechaventa.getFullYear();
+    //const mes= nuevafechaventa.getMonth();
+    //const dia= nuevafechaventa.getDate();
     const errors = validationResult(req);
     if (!errors.isEmpty()){
         return res.status(400).json({errors: errors.array()});
@@ -30,6 +34,7 @@ export const createVentasSeguro = async (req,res) =>{
         const alreadyInUse = await NuevaVentaSeguro.findOne({placaVehiculo})
         if(alreadyInUse) return res.status(400).json({message:'El vehiculo ya cuenta con un seguro'});
         const creo = await NuevaVentaSeguro.create({
+            //año,mes,dia,fechaExpiracion,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta
             fechaVenta,fechaExpiracion,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta
         });
         res.status(201).json({creo})
@@ -81,6 +86,7 @@ export const updateVentasSeguro = async(req, res) =>{
     res.json(updateVenta)
 }
 
+
 //Automatizados
 const verVencidos = async(req,res) =>{
     try{
@@ -103,6 +109,105 @@ const cambiarVencidos = async (req,res) =>{
 
 }
 
+//const sumaVentas1Mes = async (req,res)=>{
+//  const fechaHoy = new Date();
+//  const mes = fechahoy.getMonth()-1;
+//  try{
+//      const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//      let sumaVendidos= 0;
+//      for(const ventaSeguro of ventasSeguros){
+//      sumaVendidos = sumaVendidos + Number(ventaSeguro.valorVenta);
+//      }
+//      return sumaVendidos;
+//  }catch(error){
+//      return error;
+//  }
+//}
+//const sumaVentas1Mes = async (req,res)=>{
+//  const fechaHoy = new Date();
+//  const mes = fechahoy.getMonth()-1;
+//  try{
+//      const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//      return ventasSeguros;
+//  }catch(error){
+//      return error;
+//  }
+//}
+
+
+// const sumaVentas6Mes = async(req,res)=>{
+//     const fechaHoy = new Date();
+//     let n = 1;
+//     let ventasSeguros1 = [];
+//     try{
+//         while(n<=6){
+//             const mesn = fechahoy.getMonth()-n;
+//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//             ventasSeguros1.push(ventasSeguros);
+//             n = n+1;
+//         }
+//         let sumaVendidos= 0;
+//         for(const ventaSeguro1 of ventasSeguros1){
+//         sumaVendidos = sumaVendidos + Number(ventaSeguro.valorVenta);
+//         }
+//         return sumaVendidos;
+//     }catch(error){
+//         return error;
+//     }
+// }
+//const sumaVentas6Mostrar = async (req,res)=>{
+//  const fechaHoy = new Date();
+//  const mes = fechahoy.getMonth()-1;
+//  try{
+//      while(n<=6){
+//             const mesn = fechahoy.getMonth()-n;
+//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//             ventasSeguros1.push(ventasSeguros);
+//             n = n+1;
+//      }
+//      return ventasSeguros1;
+//  }catch(error){
+//      return error;
+//  }
+//}
+
+// const sumaVentas12Mes = async(req,res)=>{
+//     const fechaHoy = new Date();
+//     let n = 1;
+//     let ventasSeguros1 = [];
+//     try{
+//         while(n<=12){
+//             const mesn = fechahoy.getMonth()-n;
+//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//             ventasSeguros1.push(ventasSeguros);
+//             n = n+1;
+//         }
+//         let sumaVendidos= 0;
+//         for(const ventaSeguro1 of ventasSeguros1){
+//         sumaVendidos = sumaVendidos + Number(ventaSeguro.valorVenta);
+//         }
+//         return sumaVendidos;
+//     }catch(error){
+//         return error;
+//     }
+// }
+//const sumaVentas12Mostrar = async (req,res)=>{
+//  const fechaHoy = new Date();
+//  const mes = fechahoy.getMonth()-1;
+//  try{
+//      let ventasSeguros1 = [];
+//      while(n<=6){
+//             const mesn = fechahoy.getMonth()-n;
+//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+//             ventasSeguros1.push(ventasSeguros);
+//             n = n+1;
+//      }
+//      return ventasSeguros1;
+//  }catch(error){
+//      return error;
+//  }
+//}
+
 //cada 3 horas 0 */3 * * *
 const job = schedule.scheduleJob('* * * * *',function(){
     try{
@@ -115,5 +220,4 @@ const job = schedule.scheduleJob('* * * * *',function(){
     }catch(error){
         return error;
     }
- 
 });
