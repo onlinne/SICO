@@ -18,10 +18,11 @@ export const getVentasSeguro = async(req, res) =>{
 
 export const createVentasSeguro = async (req,res) =>{
     const {fechaVenta,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta} = req.body;
-    //const nuevafechaventa = new Date(fechaVenta);
-    //const año= nuevafechaventa.getFullYear();
-    //const mes= nuevafechaventa.getMonth();
-    //const dia= nuevafechaventa.getDate();
+    const nuevafechaventa = new Date(fechaVenta);
+    const anio= nuevafechaventa.getFullYear();
+    const mes= nuevafechaventa.getMonth()+1;
+    const dia= nuevafechaventa.getDate();
+    nuevafechaventa.setHours(0,0,0,0);
     const errors = validationResult(req);
     if (!errors.isEmpty()){
         return res.status(400).json({errors: errors.array()});
@@ -30,12 +31,12 @@ export const createVentasSeguro = async (req,res) =>{
         let fechaExpiracion = new Date(fechaVenta);
         fechaExpiracion.setFullYear(fechaExpiracion.getFullYear()+1);
         fechaExpiracion.setHours(0,0,0,0);
+        console.log("expiracion "+fechaExpiracion);
         fechaExpiracion = fechaExpiracion.valueOf();
         const alreadyInUse = await NuevaVentaSeguro.findOne({placaVehiculo})
         if(alreadyInUse) return res.status(400).json({message:'El vehiculo ya cuenta con un seguro'});
         const creo = await NuevaVentaSeguro.create({
-            //año,mes,dia,fechaExpiracion,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta
-            fechaVenta,fechaExpiracion,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta
+            anio,mes,dia,fechaExpiracion,tipoVehiculo, placaVehiculo, cedulaCliente, valorVenta
         });
         res.status(201).json({creo})
     }catch(error){
@@ -43,19 +44,6 @@ export const createVentasSeguro = async (req,res) =>{
     }
 }
 
-const segurosVencidos = async(req,res) =>{
-    try{
-        const vencidos = await NuevaVentaSeguro.find({expiro: true});
-        let crear;
-        for(const vencido of vencidos){
-            const crear = await SeguroVencido.create({fechaVenta:vencido.fechaVenta,fechaExpiracion:vencido.fechaExpiracion,tipoVehiculo:vencido.tipoVehiculo,placaVehiculo:vencido.placaVehiculo,cedulaCliente:vencido.cedulaCliente,valorVenta:vencido.valorVenta,expiro:vencido.expiro})
-        }
-        const eliminar = await NuevaVentaSeguro.deleteMany({expiro:true});
-        return vencidos;
-    }catch(error){
-        return error;
-    }
-}
 
 export const getAllByExpire = async (req,res) =>{
     let dias = parseInt(req.params.dias);
@@ -68,7 +56,7 @@ export const getAllByExpire = async (req,res) =>{
     try{
         const seguroExpirado = await NuevaVentaSeguro.find({fechaExpiracion: fechaProxima});
         res.status(200).json(seguroExpirado);
-
+        
     }catch(error){
         res.status(404).json({message: error.message});
     }
@@ -88,6 +76,20 @@ export const updateVentasSeguro = async(req, res) =>{
 
 
 //Automatizados
+const segurosVencidos = async(req,res) =>{
+    try{
+        const vencidos = await NuevaVentaSeguro.find({expiro: true});
+        let crear;
+        for(const vencido of vencidos){
+            const crear = await SeguroVencido.create({fechaVenta:vencido.fechaVenta,fechaExpiracion:vencido.fechaExpiracion,tipoVehiculo:vencido.tipoVehiculo,placaVehiculo:vencido.placaVehiculo,cedulaCliente:vencido.cedulaCliente,valorVenta:vencido.valorVenta,expiro:vencido.expiro})
+        }
+        const eliminar = await NuevaVentaSeguro.deleteMany({expiro:true});
+        return vencidos;
+    }catch(error){
+        return error;
+    }
+}
+
 const verVencidos = async(req,res) =>{
     try{
         const vencidos = await NuevaVentaSeguro.find({expiro: true});

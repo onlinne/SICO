@@ -9,7 +9,7 @@ const {body} = pkg;
 router.get('/', getVentasSeguro);
 router.get('/vencido',getSeguroVencido);
 router.get('/fecha/:fecha/:dias',getAllByExpire);
-router.post('/',body("cedulaCliente").isNumeric({no_symbols:true}),body("fechaVenta").isDate(), createVentasSeguro);
+router.post('/',body("cedulaCliente").isNumeric({no_symbols:true}), createVentasSeguro);
 router.patch('/:id',body("ceducedulaClientelaCliente").isNumeric({no_symbols:true}), updateVentasSeguro);
 
 
