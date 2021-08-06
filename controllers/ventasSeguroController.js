@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 import NuevaVentaSeguro from '../models/VentaSeguro.js';
 import SeguroVencido from '../models/SegurosVencidos.js';
-import schedule from 'node-schedule';
+import Schedule from 'node-schedule';
 import ReportesSeguros from '../models/ReportesSeguros.js';
 import ReportesSegurosSeis from '../models/ReportesSeisSeguros.js';
-import ReportesSegurosUn from '../models/ReportesUnSeguros.js';
+import ReportesSegurosUn from '../models/ReportesAnioSeguros.js';
 
 
 import pkg from 'express-validator';
@@ -120,7 +120,7 @@ const cambiarVencidos = async (req,res) =>{
 }
 
 //cada 3 horas 0 */3 * * *
-const job1 = schedule.scheduleJob('* * * * *',function(){
+const jobExpiredSecures = Schedule.scheduleJob('0 */3 * * *',function(){
     try{
         cambiarVencidos();
         verVencidos().then(vencidos => {
@@ -135,10 +135,11 @@ const job1 = schedule.scheduleJob('* * * * *',function(){
 
 const sumaVentas1Mes = async (req,res)=>{
  const fechaHoy = new Date();
- const mes = fechaHoy.getMonth();
+ const mes = fechaHoy.getMonth()-1;
  const fechaReporte = new Date();
- fechaReporte.setDate(fechaHoy.getDate()-1);
+ fechaReporte.setDate(fechaHoy.getDate());
  try{
+     console.log('funcion ventas');
     const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
     let sumaVendidos= 0;
     for(const ventaSeguro of ventasSeguros){
@@ -151,10 +152,37 @@ const sumaVentas1Mes = async (req,res)=>{
  }
 }
 
-//Scheduler del reporte mensual: 1 dia del mes: 0 0 1 * *; 
-const job2 = schedule.scheduleJob('* * * * *',function(){
+const objectOfMonths = {
+    reportesmesuno : {
+       async tabla (today){
+           console.log('entro?');
+            const verify = await ReportesSeguros.find({anio:today.getFullYear(), mes:today.getMonth()});
+            return verify;
+        },
+        suma(){sumaVentas1Mes()}
+    }
+}
+
+const verificationReportOneMonth = async(req, res)=>{
     try{
-        sumaVentas1Mes();
+        const today = new Date();
+        //const verify = await ReportesSeguros.find({anio:today.getFullYear(), mes:today.getMonth()});
+        const verify = await objectOfMonths.reportesmesuno.tabla(today);
+        if(!verify.length){
+            objectOfMonths.reportemesuno.suma();
+        }else{
+            console.log('el reporte ya existe');
+        }
+        return verify;
+    }catch(error){
+        return error;
+    }
+}
+
+//1mes =  2pm y a las 5  * 14,17 1-15 * TUE
+const jobOneMonthReport = Schedule.scheduleJob('* * * * *',function(){
+    try{
+        verificationReportOneMonth();
     }catch(error){
         return error;
     }
@@ -162,7 +190,7 @@ const job2 = schedule.scheduleJob('* * * * *',function(){
 
 export const sumaVentas1Mostrar = async (req,res)=>{
  const fechaHoy = new Date();
- const mes = fechaHoy.getMonth();
+ const mes = fechaHoy.getMonth()-1;
  try{
      const ventasSeguros = await NuevaVentaSeguro.find({mes: mes});
      const mesReporte = await ReportesSeguros.find({anio: fechaHoy.getFullYear(), mes: mes});
@@ -176,13 +204,13 @@ export const sumaVentas1Mostrar = async (req,res)=>{
 const sumaVentas6Mes = async(req,res)=>{
     const fechaHoy = new Date();
     const fechaReporte = new Date();
-    fechaReporte.setDate(fechaHoy.getDate()-1);
+    fechaReporte.setDate(fechaHoy.getDate());
     let n = 0;
     let ventasSeguros1=[];
     try{
-        while(n<=6){
-            const mesn = fechaHoy.getMonth()-n;
-            let ventasSeguros = await NuevaVentaSeguro.find({mes:mesn});
+        while(n<6){
+            const mesCount = fechaHoy.getMonth()-n;
+            let ventasSeguros = await NuevaVentaSeguro.find({mes:mesCount});
             ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
             ventasSeguros=[];
             n = n+1;
@@ -197,21 +225,32 @@ const sumaVentas6Mes = async(req,res)=>{
         return error;
     }
 }
-//const sumaVentas6Mostrar = async (req,res)=>{
-//  const fechaHoy = new Date();
-//  const mes = fechahoy.getMonth()-1;
-//  try{
-//      while(n<=6){
-//             const mesn = fechahoy.getMonth()-n;
-//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
-//             ventasSeguros1.push(ventasSeguros);
-//             n = n+1;
-//      }
-//      return ventasSeguros1;
-//  }catch(error){
-//      return error;
-//  }
-//}
+
+//6meses = 2pm 
+const jobSixMonthReport = Schedule.scheduleJob('* * * * *',function(){
+    try{
+        sumaVentas6Mes();
+    }catch(error){
+        return error;
+    }
+});
+
+
+const sumaVentas6Mostrar = async (req,res)=>{
+ const fechaHoy = new Date();
+ const mes = fechahoy.getMonth()-1;
+ try{
+     while(n<=6){
+            const mesn = fechahoy.getMonth()-n;
+            const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
+            ventasSeguros1.push(ventasSeguros);
+            n = n+1;
+     }
+     return ventasSeguros1;
+ }catch(error){
+     return error;
+ }
+}
 
 export const sumaVentas12Mes = async(req,res)=>{
     const fechaHoy = new Date();
@@ -246,4 +285,3 @@ export const sumaVentas12Mes = async(req,res)=>{
 //      return error;
 //  }
 //}
-
