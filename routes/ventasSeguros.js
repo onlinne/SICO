@@ -1,5 +1,5 @@
 import express from 'express';
-import { getVentasSeguro, getAllByExpire,createVentasSeguro, updateVentasSeguro, sumaVentas1Mostrar,sumaVentas12Mes} from '../controllers/ventasSeguroController.js';
+import { getVentasSeguro, getAllByExpire,createVentasSeguro, updateVentasSeguro, sumaVentas1Mostrar, sumaVentas12Mostrar} from '../controllers/ventasSeguroController.js';
 import { getSeguroVencido} from '../controllers/segurosVencidosController.js';
 import pkg from 'express-validator';
 
@@ -12,8 +12,6 @@ router.get('/fecha/:fecha/:dias',getAllByExpire);
 router.post('/',body("cedulaCliente").isNumeric({no_symbols:true}), createVentasSeguro);
 router.patch('/:id',body("ceducedulaClientelaCliente").isNumeric({no_symbols:true}), updateVentasSeguro);
 router.get('/reporteunmes', sumaVentas1Mostrar);
-router.get('/suma',sumaVentas12Mes);
-
-
+router.get('/reportesanio', sumaVentas12Mostrar)
 
 export default router;

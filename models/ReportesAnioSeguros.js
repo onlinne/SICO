@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 
 const reportesunsegurosSchema = mongoose.Schema({
-    anio:String,
-    mes:String,
-    dia:String,
+    yearReported:{type: String},
+    yearReport:{type: String},
+    monthReport:{type: String},
+    dayReport:{type: String},
     valorVenta: {type: Number, required: true}
 });
 
