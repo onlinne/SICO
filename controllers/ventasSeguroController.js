@@ -163,7 +163,7 @@ const sumaVentas1Mes = async (req,res)=>{
     console.log('Reporte del mes ' + mes + ' Creado');
     return sumaVendidos;
  }catch(error){
-    return error;
+    return error.message;
  }
 }
 
@@ -171,16 +171,25 @@ const sumaVentas6Mes = async(req,res)=>{
     const fechaHoy = new Date();
     const fechaReporte = new Date();
     fechaReporte.setDate(fechaHoy.getDate());
+    let mes = fechaHoy.getMonth();
     let n = 0;
     let ventasSeguros1=[];
+    //let nuevon=6;
     try{
         while(n<6){
-            const mesCount = fechaHoy.getMonth()-n;
-            //problema logico en verificacione de 6 meses del año anterior (enero)
-            let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear(), mes:mesCount}); 
-            ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
-            ventasSeguros=[];
-            n = n+1;
+            if(mes >=6){
+                const mesCount = fechaHoy.getMonth()-n;
+                let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear(), mes:mesCount}); 
+                ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
+                ventasSeguros=[];
+                n = n+1;
+            }else if(mes<6){
+                const mesCount = 11-n;
+                let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear()-1, mes:mesCount}); 
+                ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
+                ventasSeguros=[];
+                n = n+1;
+            }
         }
         let sumaVendidos= 0;
         for(const ventaSeguro1 of ventasSeguros1){
@@ -191,7 +200,7 @@ const sumaVentas6Mes = async(req,res)=>{
             monthReport: fechaReporte.getMonth(), 
             dayReport: fechaReporte.getDate(), 
             valorVenta: sumaVendidos});
-        console.log('Reporte de seis meses creado');
+        console.log('Reporte de seis meses creado'+crearReporte);
         return crearReporte;
     }catch(error){
         return error;
@@ -267,7 +276,7 @@ const verificationReport = async(key, req, res)=>{
 
 //1mes =  2pm y a las 5  <0 14,17 1-15 * TUE>: 
 //At every minute past hour 14 and 17 on every day-of-month from 1 through 15 and on Tuesday.
-const jobOneMonthReport = Schedule.scheduleJob('0 14,17 1-15 * TUE',function(){
+const jobOneMonthReportSecures = Schedule.scheduleJob('0 14,17 1-15 * TUE',function(){
     try{
         verificationReport('reportOneMonth');
     }catch(error){
@@ -277,7 +286,7 @@ const jobOneMonthReport = Schedule.scheduleJob('0 14,17 1-15 * TUE',function(){
 
 //6meses = 2pm <0 14 1-15 1,7 TUE>: 
 //At 14:00 on every day-of-month from 1 through 15 and on Tuesday in January and July.
-const jobSixMonthReport = Schedule.scheduleJob('0 14 1-15 1,7 TUE',function(){
+const jobSixMonthReportSecures = Schedule.scheduleJob('0 14 1-15 1,7 TUE',function(){
     try{
         verificationReport('reportSixMonths');
     }catch(error){
@@ -287,7 +296,7 @@ const jobSixMonthReport = Schedule.scheduleJob('0 14 1-15 1,7 TUE',function(){
 
 //1año = ponerlo x veces los primeros 15 dias de enero <0 14,19 1-15 1 TUE>: 
 //At minute 0 past hour 14 and 19 on every day-of-month from 1 through 15 and on Tuesday in January.
-const jobYearReport = Schedule.scheduleJob('0 14,19 1-15 1 TUE',function(){
+const jobYearReportSecures = Schedule.scheduleJob('0 14,19 1-15 1 TUE',function(){
     try{
         verificationReport('reportYear');
     }catch(error){
@@ -307,29 +316,31 @@ export const sumaVentas1Mostrar = async (req,res)=>{
  }
 }
 
-// export const sumaVentas6Mostrar = async (req,res)=>{
-//  const fechaHoy = new Date();
-//  const mes = fechahoy.getMonth()-1;
-//  try{
-//      while(n<=6){
-//             const mesn = fechahoy.getMonth()-n;
-//             const ventasSeguros = await NuevaVentaSeguro.find({mes:mes});
-//             ventasSeguros1.push(ventasSeguros);
-//             n = n+1;
-//      }
-//      return ventasSeguros1;
-//  }catch(error){
-//      return error;
-//  }
-// }
+export const sumaVentas6Mostrar = async (req,res)=>{
+ const fechaHoy = new Date();
+ const mes = fechaHoy.getMonth()-1;
+ const anio = fechaHoy.getFullYear()-1;
+ try{
+     if(mes ===6){
+            const ventasSeguros = await NuevaVentaSeguro.find({mes:6});
+            const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
+     }else if(mes===0){
+            const ventasSeguros = await NuevaVentaSeguro.find({anio:anio,mes:0});
+            const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 0});
+     }
+     res.status(200).json({ventasSeguros, mesReporte});
+ }catch(error){
+    res.status(200).json({message: error.message});
+ }
+}
 
 export const sumaVentas12Mostrar = async (req,res)=>{
- const fechaHoy = new Date();
- try{
-    const ventasSeguros = await NuevaVentaSeguro.find({anio: fechaHoy.getFullYear()-1});
-    const anioReporte = await ReportesSegurosUn.find({yearReported: fechaHoy.getFullYear()-1});
-    res.status(200).json({ventasSeguros, anioReporte});
-}catch(error){
-    res.status(400).json({message:error.message});
-}
+    const fechaHoy = new Date();
+    try{
+        const ventasSeguros = await NuevaVentaSeguro.find({anio: fechaHoy.getFullYear()-1});
+        const anioReporte = await ReportesSegurosUn.find({yearReported: fechaHoy.getFullYear()-1});
+        res.status(200).json({ventasSeguros, anioReporte});
+    }catch(error){
+        res.status(400).json({message:error.message});
+    }
 }

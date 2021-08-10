@@ -18,10 +18,9 @@ const SchemaVentaCloset=new mongoose.Schema({
         type: Number,
         required: true
     },
-    registrada:{
-        type: Date,
-        required: true
-    }
+    anio:String,
+    mes:String,
+    dia:String
 });
 const NuevaVentaCloset = mongoose.model('NuevaVentaCloset',SchemaVentaCloset);
 export default NuevaVentaCloset;
