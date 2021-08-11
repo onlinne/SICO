@@ -235,45 +235,51 @@ const jobYearReportClosets = Schedule.scheduleJob('0 14,19 1-15 1 TUE',function(
         return error;
     }
 });
+
+/*
+-asd-asd-a-sd-asd-a-s-ad-as-d-ad-aa a-sd-a-da-sd-as-d-asd-a-d-as-a-s-ad-ad-a-as-adsa-sa-sds--asas-d
+asdqwewdasdad-----------------asdasa-----------------asdasdasda-sd-asd-asd-as-da-ds-asd-a-d-asd-asd
+asdasa--as-das-as-as-as-dasasd-asd-a-sas-as-d-wqe-wq---fds-sdf-d-fds-f--sdf-as-d-asd-as-d-ad-as-d-a
+*/
+
+export const sumaVentas1Mostrar = async (req,res)=>{
+    const fechaHoy = new Date();
+    const mes = fechaHoy.getMonth()-1;
+    try{
+        const ventasCloset = await NuevaVentaCloset.find({anio: fechaHoy.getFullYear(), mes: mes});
+        const reporteUnMes = await ReportesUnMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: mes});
+        res.status(200).json({ventasCloset, reporteUnMes});
+    }catch(error){
+        res.status(400).json({message:error.message});
+    }
+}
    
-// export const sumaVentas1Mostrar = async (req,res)=>{
-// const fechaHoy = new Date();
-// const mes = fechaHoy.getMonth()-1;
-// try{
-//     const ventasSeguros = await NuevaVentaSeguro.find({anio: fechaHoy.getFullYear(), mes: mes});
-//     const mesReporte = await ReportesSeguros.find({yearReport: fechaHoy.getFullYear(), monthReport: mes});
-//     res.status(200).json({ventasSeguros, mesReporte});
-// }catch(error){
-//     res.status(400).json({message:error.message});
-// }
-// }
+export const sumaVentas6Mostrar = async (req,res)=>{
+    const fechaHoy = new Date();
+    const mes = fechaHoy.getMonth()-1;
+    const anio = fechaHoy.getFullYear()-1;
+    try{
+        if(mes ===6){
+            const ventasCloset = await NuevaVentaCloset.find({mes:6});
+            const reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
+        }else if(mes===0){
+            const ventasCloset = await NuevaVentaCloset.find({anio:anio,mes:0});
+            const reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: 0});
+        }
+        res.status(200).json({ventasCloset, reporteSeisMes});
+    }catch(error){
+        res.status(200).json({message: error.message});
+    }
+}
    
-// export const sumaVentas6Mostrar = async (req,res)=>{
-// const fechaHoy = new Date();
-// const mes = fechaHoy.getMonth()-1;
-// const anio = fechaHoy.getFullYear()-1;
-// try{
-//     if(mes ===6){
-//             const ventasSeguros = await NuevaVentaSeguro.find({mes:6});
-//             const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
-//     }else if(mes===0){
-//             const ventasSeguros = await NuevaVentaSeguro.find({anio:anio,mes:0});
-//             const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 0});
-//     }
-//     res.status(200).json({ventasSeguros, mesReporte});
-// }catch(error){
-//     res.status(200).json({message: error.message});
-// }
-// }
-   
-// export const sumaVentas12Mostrar = async (req,res)=>{
-//     const fechaHoy = new Date();
-//     try{
-//         const ventasSeguros = await NuevaVentaSeguro.find({anio: fechaHoy.getFullYear()-1});
-//         const anioReporte = await ReportesSegurosUn.find({yearReported: fechaHoy.getFullYear()-1});
-//         res.status(200).json({ventasSeguros, anioReporte});
-//     }catch(error){
-//         res.status(400).json({message:error.message});
-//     }
-// }
+export const sumaVentas12Mostrar = async (req,res)=>{
+    const fechaHoy = new Date();
+    try{
+        const ventasCloset = await NuevaVentaCloset.find({anio: fechaHoy.getFullYear()-1});
+        const reporteAnio = await ReportesAnioCloset.find({yearReported: fechaHoy.getFullYear()-1});
+        res.status(200).json({ventasSeguros, reporteAnio});
+    }catch(error){
+        res.status(400).json({message:error.message});
+    }
+}
    
