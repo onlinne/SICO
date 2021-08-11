@@ -277,7 +277,7 @@ export const sumaVentas12Mostrar = async (req,res)=>{
     try{
         const ventasCloset = await NuevaVentaCloset.find({anio: fechaHoy.getFullYear()-1});
         const reporteAnio = await ReportesAnioCloset.find({yearReported: fechaHoy.getFullYear()-1});
-        res.status(200).json({ventasSeguros, reporteAnio});
+        res.status(200).json({ventasCloset, reporteAnio});
     }catch(error){
         res.status(400).json({message:error.message});
     }
