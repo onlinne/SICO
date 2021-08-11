@@ -172,19 +172,19 @@ const sumaVentas6Mes = async(req,res)=>{
     const fechaReporte = new Date();
     fechaReporte.setDate(fechaHoy.getDate());
     let mes = fechaHoy.getMonth();
-    let n = 0;
+    let n = 1;
     let ventasSeguros1=[];
     //let nuevon=6;
     try{
         while(n<6){
-            if(mes >=6){
+            if(mes >6){
                 const mesCount = fechaHoy.getMonth()-n;
                 let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear(), mes:mesCount}); 
                 ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
                 ventasSeguros=[];
                 n = n+1;
-            }else if(mes<6){
-                const mesCount = 11-n;
+            }else if(mes<=6){
+                const mesCount = 12-n;
                 let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear()-1, mes:mesCount}); 
                 ventasSeguros1.push.apply(ventasSeguros1,ventasSeguros);
                 ventasSeguros=[];
@@ -305,33 +305,49 @@ const jobYearReportSecures = Schedule.scheduleJob('0 14,19 1-15 1 TUE',function(
 });
 
 export const sumaVentas1Mostrar = async (req,res)=>{
- const fechaHoy = new Date();
- const mes = fechaHoy.getMonth()-1;
- try{
-     const ventasSeguros = await NuevaVentaSeguro.find({anio: fechaHoy.getFullYear(), mes: mes});
-     const mesReporte = await ReportesSeguros.find({yearReport: fechaHoy.getFullYear(), monthReport: mes});
-     res.status(200).json({ventasSeguros, mesReporte});
- }catch(error){
-     res.status(400).json({message:error.message});
- }
+    const fechaHoy = new Date();
+    const anio = fechaHoy.getFullYear();
+    const mes = fechaHoy.getMonth();
+    const mesAnterior = fechaHoy.getMonth()-1;
+    try{
+        const ventasSeguros = await NuevaVentaSeguro.find({anio: anio, mes: mesAnterior});
+        const mesReporte = await ReportesSeguros.find({yearReport: anio, monthReport: mes});
+        res.status(200).json({ventasSeguros, mesReporte});
+    }catch(error){
+        res.status(400).json({message:error.message});
+    }
 }
 
 export const sumaVentas6Mostrar = async (req,res)=>{
- const fechaHoy = new Date();
- const mes = fechaHoy.getMonth()-1;
- const anio = fechaHoy.getFullYear()-1;
- try{
-     if(mes ===6){
-            const ventasSeguros = await NuevaVentaSeguro.find({mes:6});
-            const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
-     }else if(mes===0){
-            const ventasSeguros = await NuevaVentaSeguro.find({anio:anio,mes:0});
-            const mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 0});
-     }
-     res.status(200).json({ventasSeguros, mesReporte});
- }catch(error){
-    res.status(200).json({message: error.message});
- }
+    const fechaHoy = new Date();
+    const mes = fechaHoy.getMonth()-1;
+    const anio = fechaHoy.getFullYear()-1;
+    let ventasSegurosMostrar = [];
+    let mesReporte = [];
+    let n=1;
+    try{
+         if(mes ===6){
+            while(n<=6){
+                let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear(), mes:n}); 
+                ventasSegurosMostrar.push.apply(ventasSegurosMostrar,ventasSeguros);
+                ventasSeguros=[];
+                n = n+1;
+            }
+            mesReporte = await ReportesSegurosSeis.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
+        }else if(mes===0){
+            while(n<=6){
+                let mesCount = 12-n;
+                let ventasSeguros = await NuevaVentaSeguro.find({anio:fechaHoy.getFullYear(), mes:mesCount}); 
+                ventasSegurosMostrar.push.apply(ventasSegurosMostrar,ventasSeguros);
+                ventasSeguros=[];
+                n = n+1;
+            }
+            mesReporte = await ReportesSegurosSeis.find({yearReport: anio, monthReport: 0});
+        }
+        res.status(200).json({ventasSegurosMostrar, mesReporte});
+    }catch(error){
+        res.status(200).json({message: error.message});
+    }
 }
 
 export const sumaVentas12Mostrar = async (req,res)=>{

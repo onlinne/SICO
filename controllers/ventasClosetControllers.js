@@ -65,14 +65,6 @@ export const updateVentaCloset = async (req,res) =>{
     res.json(updatedVenta)
 }
 
-
-
-
-/*
--asd-asd-a-sd-asd-a-s-ad-as-d-ad-aa a-sd-a-da-sd-as-d-asd-a-d-as-a-s-ad-ad-a-as-adsa-sa-sds--asas-d
-asdqwewdasdad-----------------asdasa-----------------asdasdasda-sd-asd-asd-as-da-ds-asd-a-d-asd-asd
-asdasa--as-das-as-as-as-dasasd-asd-a-sas-as-d-wqe-wq---fds-sdf-d-fds-f--sdf-as-d-asd-as-d-ad-as-d-a
-*/
 const sumaVentas1Mes = async (req,res)=>{
     const fechaHoy = new Date();
     const mes = fechaHoy.getMonth()-1;
@@ -105,17 +97,17 @@ const sumaVentas6Mes = async(req,res)=>{
     const fechaReporte = new Date();
     fechaReporte.setDate(fechaHoy.getDate());
     let mes = fechaHoy.getMonth();
-    let n = 0;
+    let n = 1;
     let ventasCloset1=[];
     try{
         while(n<6){
-            if(mes >=6){
+            if(mes >6){
                 const mesCount = fechaHoy.getMonth()-n;
                 let ventasCloset = await NuevaVentaCloset.find({anio:fechaHoy.getFullYear(), mes:mesCount}); 
                 ventasCloset1.push.apply(ventasCloset1,ventasCloset);
                 ventasCloset=[];
                 n = n+1;
-            }else if(mes<6){
+            }else if(mes<=6){
                 const mesCount = 11-n;
                 let ventasCloset = await NuevaVentaCloset.find({anio:fechaHoy.getFullYear()-1, mes:mesCount}); 
                 ventasCloset1.push.apply(ventasCloset1,ventasCloset);
@@ -236,18 +228,14 @@ const jobYearReportClosets = Schedule.scheduleJob('0 14,19 1-15 1 TUE',function(
     }
 });
 
-/*
--asd-asd-a-sd-asd-a-s-ad-as-d-ad-aa a-sd-a-da-sd-as-d-asd-a-d-as-a-s-ad-ad-a-as-adsa-sa-sds--asas-d
-asdqwewdasdad-----------------asdasa-----------------asdasdasda-sd-asd-asd-as-da-ds-asd-a-d-asd-asd
-asdasa--as-das-as-as-as-dasasd-asd-a-sas-as-d-wqe-wq---fds-sdf-d-fds-f--sdf-as-d-asd-as-d-ad-as-d-a
-*/
-
 export const sumaVentas1Mostrar = async (req,res)=>{
     const fechaHoy = new Date();
-    const mes = fechaHoy.getMonth()-1;
+    const anio = fechaHoy.getFullYear();
+    const mes = fechaHoy.getMonth();
+    const mesAnterior = fechaHoy.getMonth()-1;
     try{
-        const ventasCloset = await NuevaVentaCloset.find({anio: fechaHoy.getFullYear(), mes: mes});
-        const reporteUnMes = await ReportesUnMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: mes});
+        const ventasCloset = await NuevaVentaCloset.find({anio: anio, mes: mesAnterior});
+        const reporteUnMes = await ReportesUnMesCloset.find({yearReport: anio, monthReport: mes});
         res.status(200).json({ventasCloset, reporteUnMes});
     }catch(error){
         res.status(400).json({message:error.message});
@@ -256,17 +244,32 @@ export const sumaVentas1Mostrar = async (req,res)=>{
    
 export const sumaVentas6Mostrar = async (req,res)=>{
     const fechaHoy = new Date();
-    const mes = fechaHoy.getMonth()-1;
-    const anio = fechaHoy.getFullYear()-1;
+    const mes = fechaHoy.getMonth();
+    const anio = fechaHoy.getFullYear();
+    const anioAnterior = fechaHoy.getFullYear()-1;
+    let ventasClosetMostrar= [];
+    let reporteSeisMes =[];
+    let n = 1;
     try{
-        if(mes ===6){
-            const ventasCloset = await NuevaVentaCloset.find({mes:6});
-            const reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: 6});
-        }else if(mes===0){
-            const ventasCloset = await NuevaVentaCloset.find({anio:anio,mes:0});
-            const reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: fechaHoy.getFullYear(), monthReport: 0});
+        if(mes >6){
+            while(n<=6){
+                let ventasCloset = await NuevaVentaCloset.find({anio:anio, mes:n}); 
+                ventasClosetMostrar.push.apply(ventasClosetMostrar,ventasCloset);
+                ventasCloset=[];
+                n = n+1;
+            }
+            reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: anio, monthReport: 7});
+        }else if(mes<=6){
+            while(n<=6){
+                const mesCount = 12-n;
+                let ventasCloset = await NuevaVentaCloset.find({anio:anioAnterior, mes:mesCount}); 
+                ventasClosetMostrar.push.apply(ventasClosetMostrar,ventasCloset);
+                ventasCloset=[];
+                n = n+1;
+            }
+            reporteSeisMes = await ReportesSeisMesCloset.find({yearReport: anio, monthReport: 0});
         }
-        res.status(200).json({ventasCloset, reporteSeisMes});
+        res.status(200).json({ventasClosetMostrar, reporteSeisMes});
     }catch(error){
         res.status(200).json({message: error.message});
     }
