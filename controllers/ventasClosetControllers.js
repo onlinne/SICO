@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import NuevaVentaCloset from '../models/VentaCloset.js';
+import NuevoClienteCloset from '../models/ClienteCloset.js';
 import Schedule from 'node-schedule';
 import ReportesUnMesCloset from '../models/ReportesUnMesCloset.js';
 import ReportesSeisMesCloset from '../models/ReportesSeisMesCloset.js';
@@ -16,6 +17,7 @@ export const getVentasCloset = async (req, res) =>{
     }
 }
 
+
 /*export const findById = async (req, res) =>{
     const {cedula,nombre,contrasenia} = req.body;
     try{
@@ -29,7 +31,7 @@ export const getVentasCloset = async (req, res) =>{
 };*/
 
 export const createVentaCloset = async (req,res) =>{
-    const {fechaVenta,numeroContrato,cedulaCliente,contrato,valorVenta} = req.body;
+    const {fechaVenta,numeroContrato,cliente,contrato,valorVenta} = req.body;
     const fechaHoy = new Date(fechaVenta);
     fechaHoy.setHours(0,0,0,0);
     const anio= fechaHoy.getFullYear();
@@ -41,12 +43,20 @@ export const createVentaCloset = async (req,res) =>{
     }
     try {
         const existingContract = await NuevaVentaCloset.findOne({numeroContrato});
+        let cli = {}; 
 		if (existingContract)
 			return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' });
-		console.log(numeroContrato);
+        if (req.params.flag === String(0)){
+            cli = await NuevoClienteCloset.find({cedula: cliente});
+        }else if (req.params.flag === String(1)){
+            cli = await NuevoClienteCloset.find({nombre: cliente});
+        }
+        console.log(cli._id);
+        const {_id,cedula,nombre,telefono,direccion,correo} = cli;
         const contractCreate = await NuevaVentaCloset.create({
-            numeroContrato,cedulaCliente,contrato,valorVenta,anio,mes,dia
+            numeroContrato,cli,contrato,valorVenta,anio,mes,dia
         });
+        console.log(_id);
         res.status(201).json({contractCreate})
     } catch (error) {
         res.status(409).json({message: error.message});
@@ -63,6 +73,18 @@ export const updateVentaCloset = async (req,res) =>{
     if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('La venta no existe');
     const updatedVenta = await NuevaVentaCloset.findByIdAndUpdate(_id, {cedula,nombre,contrasenia}, {new: true});
     res.json(updatedVenta)
+}
+
+const ventaVencida = async (req, res)=>{
+    const dat = new Date();
+    const dateToday = new Date (dat.setHours(0,0,0,0));
+    const pastMonth = dateToday.getMonth();
+    try{
+        ventas = await NuevaVentaCloset.updateMany({mes: pastMonth}, {editable: false});
+        return ventas;
+    }catch(error){
+        return error;
+    }  
 }
 
 const sumaVentas1Mes = async (req,res)=>{
@@ -197,7 +219,18 @@ const verificationReport = async(key, req, res)=>{
         return error;
     }
 }
-   
+
+
+//cada 3 horas <0 */3 * * *>: At minute 0 past every 3rd hour.
+const jobEditableVerification = Schedule.scheduleJob('0 */3 * * *',function(){
+    try{
+        ventaVencida();
+    }catch(error){
+        return error;
+    }
+});
+
+
 //1mes =  2pm y a las 5  <0 14,17 1-15 * TUE>: 
 //At every minute past hour 14 and 17 on every day-of-month from 1 through 15 and on Tuesday.
 const jobOneMonthReportClosets = Schedule.scheduleJob('0 14,17 1-15 * TUE',function(){

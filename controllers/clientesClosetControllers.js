@@ -12,17 +12,27 @@ export const getClientesCloset = async (req, res) =>{
     }
 }
 
-/*export const findById = async (req, res) =>{
-    const {cedula,nombre,contrasenia} = req.body;
-    try{
-        const gerente = await ClienteCloset.findOne({cedula});
-        return req.params._id;
-    }catch(error){
-        console.log(error)
-        return res.status(404).json({ message: 'El usuario no existe' });
-    }
-    
-};*/
+// export const findByCedula = async (cliente) =>{
+//     const cedula = cliente;
+//     try{
+//         const clienteBusqueda= await NuevoClienteCloset.findOne({cedula: cedula});
+//         return clienteBusqueda;
+//     }catch(error){
+//         console.log(error)
+//         return ('El usuario no existe' );
+//     }  
+// };
+
+// export const findByNombre = async (req, res) =>{
+//     const {nombre} = req.body;
+//     try{
+//         const cliente = await ClienteCloset.find({nombre: nombre});
+//         return cliente;
+//     }catch(error){
+//         console.log(error)
+//         return res.status(404).json({ message: 'El usuario no existe' });
+//     }  
+// };
 
 export const createClienteCloset = async (req,res) =>{
     const {cedula,nombre,telefono,direccion,correo} = req.body;

@@ -1,5 +1,5 @@
 import express from 'express';
-import {getClientesCloset,createClienteCloset,updateClienteCloset} from '../controllers/clientesClosetControllers.js'
+import {getClientesCloset, createClienteCloset,updateClienteCloset} from '../controllers/clientesClosetControllers.js'
 import pkg from 'express-validator';
 const router = express.Router();
 const {body} = pkg;
