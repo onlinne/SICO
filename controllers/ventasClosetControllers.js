@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import NuevaVentaCloset from '../models/VentaCloset.js';
 import NuevoClienteCloset from '../models/ClienteCloset.js';
+import {ClienteCloset} from '../models/VentaCloset.js';
 import Schedule from 'node-schedule';
 import ReportesUnMesCloset from '../models/ReportesUnMesCloset.js';
 import ReportesSeisMesCloset from '../models/ReportesSeisMesCloset.js';
@@ -32,33 +33,70 @@ export const getVentasCloset = async (req, res) =>{
 
 export const createVentaCloset = async (req,res) =>{
     const {fechaVenta,numeroContrato,cliente,contrato,valorVenta} = req.body;
+    console.log("fecha "+fechaVenta)
     const fechaHoy = new Date(fechaVenta);
     fechaHoy.setHours(0,0,0,0);
+    console.log("fechaHoy "+fechaHoy)
     const anio= fechaHoy.getFullYear();
     const mes= fechaHoy.getMonth()+1;
     const dia= fechaHoy.getDate();
+
     const errors = validationResult(req);
     if (!errors.isEmpty()){
         return res.status(400).json({errors: errors.array()});
     }
+
     try {
-        const existingContract = await NuevaVentaCloset.findOne({numeroContrato});
-        let cli = {}; 
-		if (existingContract)
-			return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' });
+        let cli = { };
         if (req.params.flag === String(0)){
             cli = await NuevoClienteCloset.find({cedula: cliente});
         }else if (req.params.flag === String(1)){
             cli = await NuevoClienteCloset.find({nombre: cliente});
         }
-        console.log(cli._id);
-        const {_id,cedula,nombre,telefono,direccion,correo} = cli;
-        const contractCreate = await NuevaVentaCloset.create({
-            numeroContrato,cli,contrato,valorVenta,anio,mes,dia
-        });
-        console.log(_id);
+        //console.log("cli "+cli[0]._id)
+        let _id= cli[0]._id;
+        let cedula= cli[0].cedula;
+        let nombre= cli[0].nombre;
+        let telefono= cli[0].telefono;
+        let direccion= cli[0].direccion;
+        let correo= cli[0].correo;
+        const existingUser = await ClienteCloset.findOne({cedula:cedula});
+        let contractCreate={};
+        if (existingUser) {
+            try {
+                const {numeroContrato,contrato,valorVenta} = req.body;
+                const existingContract = await NuevaVentaCloset.findOne({numeroContrato});
+                if (existingContract) {
+                    return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
+                }
+                contractCreate = await NuevaVentaCloset.create({numeroContrato:numeroContrato,contrato:contrato,valorVenta:valorVenta,anio:anio,mes:mes,dia:dia,cliente:_id}); 
+                console.log("anio "+ anio+ " mes "+ mes+" dia "+ dia)
+            } catch (error) {
+                console.log(error)
+                res.status(409).json({message: error.message});
+                console.log("error en venta 3");
+            }
+        }else if(!existingUser){
+            const clienteEncontrado = await ClienteCloset.create({_id:_id,cedula:cedula,nombre:nombre,telefono:telefono,direccion:direccion,correo:correo,venta});
+            console.log("1")
+            try {
+                const {numeroContrato,contrato,valorVenta} = req.body;
+                const existingContract = await NuevaVentaCloset.findOne({numeroContrato});
+                if (existingContract) {
+                    return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
+                }
+                idEncontrado = clienteEncontrado._id;
+                contractCreate = await NuevaVentaCloset.create({numeroContrato:numeroContrato,contrato:contrato,valorVenta:valorVenta,anio:anio,mes:mes,dia:dia,cliente:_id}); 
+                console.log("contractCreate "+contractCreate); 
+            } catch (error) {
+                console.log(error)
+                res.status(409).json({message: error.message});
+                console.log("error en venta 1");
+            }
         res.status(201).json({contractCreate})
-    } catch (error) {
+        } 
+    }catch (error) {
+        console.log(error)
         res.status(409).json({message: error.message});
     }
 }
