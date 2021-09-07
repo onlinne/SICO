@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import NuevaVentaCloset from '../models/VentaCloset.js';
 import NuevoClienteCloset from '../models/ClienteCloset.js';
-import { ClienteCloset } from '../models/VentaCloset.js';
+//import { ClienteCloset } from '../models/VentaCloset.js';
 import Schedule from 'node-schedule';
 import ReportesUnMesCloset from '../models/ReportesUnMesCloset.js';
 import ReportesSeisMesCloset from '../models/ReportesSeisMesCloset.js';
@@ -33,10 +33,10 @@ export const getVentasCloset = async (req, res) => {
 
 export const createVentaCloset = async (req, res) => {
     const { fechaVenta, numeroContrato, cliente, contrato, valorVenta } = req.body;
-    console.log("fecha " + fechaVenta)
+    //console.log("fecha " + fechaVenta)
     const fechaHoy = new Date(fechaVenta);
     fechaHoy.setHours(0, 0, 0, 0);
-    console.log("fechaHoy " + fechaHoy)
+    //console.log("fechaHoy " + fechaHoy)
     const anio = fechaHoy.getFullYear();
     const mes = fechaHoy.getMonth() + 1;
     const dia = fechaHoy.getDate();
@@ -44,7 +44,6 @@ export const createVentaCloset = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    let contractCreate = {};
     try {
         let cli = {};
         if (req.params.flag === String(0)) {
@@ -54,47 +53,76 @@ export const createVentaCloset = async (req, res) => {
             cli = await NuevoClienteCloset.find({ nombre: cliente });
         }
         if (cli) {
-            //console.log("cli "+cli[0]._id)
-            let _id = cli[0]._id;
-            let cedula = cli[0].cedula;
-            let nombre = cli[0].nombre;
-            let telefono = cli[0].telefono;
-            let direccion = cli[0].direccion;
-            let correo = cli[0].correo;
-            let existingClient = await ClienteCloset.findOne({ cedula: cedula });
-            if (existingClient) {
-                try {
-                    let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
-                    if (existingContract) {
-                        return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
-                    }
-                    contractCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cliente: _id });
-                } catch (error) {
-                    console.log(error)
-                    res.status(409).json({ message: error.message });
-                }
+            let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
+            if (existingContract) {
+                return res.status(400).json({ message: 'Una venta con este numero de contrato ya fue registrado' })
             }
-            if (!existingClient) {
-                const clienteCreado = await ClienteCloset.create({ _id: _id, cedula: cedula, nombre: nombre, telefono: telefono, direccion: direccion, correo: correo, venta: venta });
-                try {
-                    let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
-                    if (existingContract) {
-                        return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
-                    }
-                    contractCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cliente: _id });
-                } catch (error) {
-                    console.log(error)
-                    res.status(409).json({ message: error.message });
-                }
-            }
+            //let _id = cli[0]._id;
+            let sellCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cedulaCliente: cli[0].cedula });
+
+            console.log("id cliente " + sellCreate._id)
+            const clienteEncontrado = await NuevoClienteCloset.findOne({ cedula: cliente });
+            await clienteEncontrado.compras.push(sellCreate._id);
+            await clienteEncontrado.save();
+            res.status(200).json(clienteEncontrado);
         }
         if (!cli) {
             res.status(409).json({ message: 'El cliente no existe, por favor creelo antes de intentar registrar una venta a este cliente' });
         }
     } catch (error) {
-        console.log(error)
         res.status(409).json({ message: error.message });
     }
+    // let contractCreate = {};
+    // try {
+    //     let cli = {};
+    //     if (req.params.flag === String(0)) {
+    //         cli = await NuevoClienteCloset.find({ cedula: cliente });
+    //     }
+    //     if (req.params.flag === String(1)) {
+    //         cli = await NuevoClienteCloset.find({ nombre: cliente });
+    //     }
+    //     if (cli) {
+    //         //console.log("cli "+cli[0]._id)
+    //         let _id = cli[0]._id;
+    //         let cedula = cli[0].cedula;
+    //         let nombre = cli[0].nombre;
+    //         let telefono = cli[0].telefono;
+    //         let direccion = cli[0].direccion;
+    //         let correo = cli[0].correo;
+    //         let existingClient = await ClienteCloset.findOne({ cedula: cedula });
+    //         if (existingClient) {
+    //             try {
+    //                 let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
+    //                 if (existingContract) {
+    //                     return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
+    //                 }
+    //                 contractCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cliente: _id });
+    //             } catch (error) {
+    //                 console.log(error)
+    //                 res.status(409).json({ message: error.message });
+    //             }
+    //         }
+    //         if (!existingClient) {
+    //             const clienteCreado = await ClienteCloset.create({ _id: _id, cedula: cedula, nombre: nombre, telefono: telefono, direccion: direccion, correo: correo, venta: venta });
+    //             try {
+    //                 let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
+    //                 if (existingContract) {
+    //                     return res.status(400).json({ message: 'El contrato ya fue registrado en una venta' })
+    //                 }
+    //                 contractCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cliente: _id });
+    //             } catch (error) {
+    //                 console.log(error)
+    //                 res.status(409).json({ message: error.message });
+    //             }
+    //         }
+    //     }
+    //     if (!cli) {
+    //         res.status(409).json({ message: 'El cliente no existe, por favor creelo antes de intentar registrar una venta a este cliente' });
+    //     }
+    // } catch (error) {
+    //     console.log(error)
+    //     res.status(409).json({ message: error.message });
+    // }
 }
 
 export const updateVentaCloset = async (req, res) => {
