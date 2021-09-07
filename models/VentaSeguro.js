@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2'
 
 const SchemaVentaSeguro = new mongoose.Schema({
     anio:String,
@@ -11,6 +12,8 @@ const SchemaVentaSeguro = new mongoose.Schema({
     valorVenta: {type: Number, required: true},
     expiro: {type: Boolean, default: false}
 })
+
+SchemaVentaSeguro.plugin(mongoosePaginate);
 
 const NuevaVentaSeguro = mongoose.model('NuevaVentaSeguro', SchemaVentaSeguro);
 export default NuevaVentaSeguro;

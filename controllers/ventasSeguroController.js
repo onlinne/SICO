@@ -12,7 +12,16 @@ const {body, validationResult} = pkg;
 
 export const getVentasSeguro = async(req, res) =>{
     try{
-        const ventasSeguro = await NuevaVentaSeguro.find();
+        const pagination = req.header('range-limit');
+        let splitPagination = pagination.split('-');
+        const options = {
+            page: splitPagination[0],
+            limit: splitPagination[1],
+            collation: {
+              locale: 'es',
+            },
+          };
+        const ventasSeguro = await NuevaVentaSeguro.paginate({},options);;
         res.status(200).json(ventasSeguro);
     }catch(error){
         res.status(404).json({message: error.message});

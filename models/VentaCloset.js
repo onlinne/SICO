@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import mongoosePaginate from 'mongoose-paginate-v2'
 
 const SchemaVentaCloset = new mongoose.Schema({
     numeroContrato: { type: String, required: true, unique: true },
@@ -8,22 +9,12 @@ const SchemaVentaCloset = new mongoose.Schema({
     mes: { type: String },
     dia: { type: String },
     editable: { type: Boolean, default: true },
-    //cliente:{type: mongoose.Schema.Types.ObjectId, ref:'ClienteCloset'}
     cedulaCliente: { type: String, required: true }
 });
 
-// const SchemaClienteCloset=new mongoose.Schema({
-//     _id:String,
-//     cedula:{type: String,required: true,maxLength:10,unique: true},
-//     nombre:{type: String,required: true},
-//     telefono:{type: String,required: true,maxLength:10},
-//     direccion:{type:String,required: true},
-//     correo:{type: String,require: false},
-//     venta:[{type: mongoose.Schema.Types.ObjectId, ref:'NuevaVentaCloset'}]
-// });
-
-//export const ClienteCloset = mongoose.model('ClienteCloset',SchemaClienteCloset);
+SchemaVentaCloset.plugin(mongoosePaginate);
 
 
 const NuevaVentaCloset = mongoose.model('NuevaVentaCloset', SchemaVentaCloset);
+
 export default NuevaVentaCloset;
