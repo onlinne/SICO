@@ -16,11 +16,11 @@ export const getVentasCloset = async (req, res) => {
             page: splitPagination[0],
             limit: splitPagination[1],
             collation: {
-              locale: 'es',
+                locale: 'es',
             },
-          };
-        const {page, limit} = req.body;
-        const ventasCloset = await NuevaVentaCloset.paginate({},options);
+        };
+        const { page, limit } = req.body;
+        const ventasCloset = await NuevaVentaCloset.paginate({}, options);
         res.status(200).json(ventasCloset);
     } catch (error) {
         res.status(404).json({ message: error.message });
@@ -52,29 +52,29 @@ export const createVentaCloset = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
+
     try {
-        let cli = {};
+        let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
+        if (existingContract) {
+            return res.status(400).json({ message: 'Una venta con este numero de contrato ya fue registrado' })
+        }
+
+        let customerFound = {};
         if (req.params.flag === String(0)) {
-            cli = await NuevoClienteCloset.find({ cedula: cliente });
+            customerFound = await NuevoClienteCloset.find({ cedula: cliente });
         }
         if (req.params.flag === String(1)) {
-            cli = await NuevoClienteCloset.find({ nombre: cliente });
+            customerFound = await NuevoClienteCloset.find({ nombre: cliente });
         }
-        if (cli) {
-            let existingContract = await NuevaVentaCloset.findOne({ numeroContrato });
-            if (existingContract) {
-                return res.status(400).json({ message: 'Una venta con este numero de contrato ya fue registrado' })
-            }
-            let sellCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cedulaCliente: cli[0].cedula });
-
-            console.log("id cliente " + sellCreate._id)
+        if (!customerFound) {
+            res.status(409).json({ message: 'El cliente ingresador no esta registrado, por favor creelo antes de intentar registrar una venta a este cliente' });
+        }
+        if (customerFound) {
+            let sellCreate = await NuevaVentaCloset.create({ numeroContrato: numeroContrato, contrato: contrato, valorVenta: valorVenta, anio: anio, mes: mes, dia: dia, cedulaCliente: customerFound[0].cedula });
             const clienteEncontrado = await NuevoClienteCloset.findOne({ cedula: cliente });
             await clienteEncontrado.compras.push(sellCreate._id);
             await clienteEncontrado.save();
-            res.status(200).json(clienteEncontrado);
-        }
-        if (!cli) {
-            res.status(409).json({ message: 'El cliente no existe, por favor creelo antes de intentar registrar una venta a este cliente' });
+            res.status(200).json({ message: 'Venta de closet registrada' });
         }
     } catch (error) {
         res.status(409).json({ message: error.message });
