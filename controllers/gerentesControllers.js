@@ -3,17 +3,17 @@ import NuevoGerente from '../models/Gerente.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pkg from 'express-validator';
-const {body, validationResult} = pkg;
+const { body, validationResult } = pkg;
 
-export const getGerentes = async (req, res) =>{
-    try{
-        const gerentes = await NuevoGerente.find();
-        res.status(200).json(gerentes);
-    }catch(error){
-        res.status(404).json({message: error.message});
-    }
-}
-
+export const getGerentes = async (req, res) => {
+	if (!req.userId) return res.json({ message: 'Unauthenticated' });
+	try {
+		const gerentes = await NuevoGerente.find();
+		res.status(200).json(gerentes);
+	} catch (error) {
+		res.status(404).json({ message: error.message });
+	}
+};
 
 /*export const findById = async (req, res) =>{
     const {cedula,nombre,contrasenia} = req.body;
@@ -28,15 +28,16 @@ export const getGerentes = async (req, res) =>{
 };*/
 
 export const signin = async (req, res) => {
+	if (!req.userId) return res.json({ message: 'Unauthenticated' });
 	const { cedula, contrasenia } = req.body;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()){
-        return res.status(400).json({errors: errors.array()});
-    }
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
 	try {
 		const existingUser = await NuevoGerente.findOne({ cedula });
 		console.log(existingUser);
-        if (!existingUser)
+		if (!existingUser)
 			return res.status(404).json({ message: 'El usuario no existe' });
 
 		const isPasswordCorrect = await bcrypt.compare(
@@ -60,40 +61,47 @@ export const signin = async (req, res) => {
 	}
 };
 
+// export const createGerentes = async (req,res) =>{
+//     const {cedula,nombre,contrasenia} = req.body;
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty()){
+//         return res.status(400).json({errors: errors.array()});
+//     }
+//     try {
+//         const existingUser = await NuevoGerente.findOne({ cedula });
+// 		if (existingUser)
+// 			return res.status(400).json({ message: 'El usuario ya existe' });
+// 		console.log(cedula);
+//         const hashedPassword = await bcrypt.hash(contrasenia, 12);
+//         const creo = await NuevoGerente.create({
+//             cedula,nombre,contrasenia: hashedPassword
+//         });
+//         res.status(201).json({creo})
+//     } catch (error) {
+//         res.status(409).json({message: error.message});
+//     }
+// }
 
-export const createGerentes = async (req,res) =>{
-    const {cedula,nombre,contrasenia} = req.body;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()){
-        return res.status(400).json({errors: errors.array()});
-    }
-    try {
-        const existingUser = await NuevoGerente.findOne({ cedula });
-		if (existingUser)
-			return res.status(400).json({ message: 'El usuario ya existe' });
-		console.log(cedula);
-        const hashedPassword = await bcrypt.hash(contrasenia, 12);
-        const creo = await NuevoGerente.create({
-            cedula,nombre,contrasenia: hashedPassword
-        });
-        res.status(201).json({creo})
-    } catch (error) {
-        res.status(409).json({message: error.message});
-    }
-}
+export const updateGerente = async (req, res) => {
+	if (!req.userId) return res.json({ message: 'Unauthenticated' });
+	const { id: _id } = req.params;
+	const { contrasenia } = req.body;
+	if (!mongoose.Types.ObjectId.isValid(_id))
+		return res.status(404).send('El gerente no existe');
+	const updatedGerente = await NuevoGerente.findByIdAndUpdate(
+		_id,
+		{ contrasenia },
+		{ new: true }
+	);
+	res.json(updatedGerente);
+};
 
-export const updateGerente = async (req,res) =>{
-    const {id: _id} = req.params;
-    const {contrasenia} = req.body;
-    if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('El gerente no existe');
-    const updatedGerente = await NuevoGerente.findByIdAndUpdate(_id, {contrasenia}, {new: true});
-    res.json(updatedGerente)
-}
-
-export const deleteGerente = async (req,res) =>{
-    const {id:_id} = req.params;
-    if(!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('El gerente no existe');
-    await NuevoGerente.findByIdAndRemove(_id);
-    console.log('DELETE');
-    res.json({message: 'Gerente eliminado'});
-}
+export const deleteGerente = async (req, res) => {
+	if (!req.userId) return res.json({ message: 'Unauthenticated' });
+	const { id: _id } = req.params;
+	if (!mongoose.Types.ObjectId.isValid(_id))
+		return res.status(404).send('El gerente no existe');
+	await NuevoGerente.findByIdAndRemove(_id);
+	console.log('DELETE');
+	res.json({ message: 'Gerente eliminado' });
+};
