@@ -1,6 +1,7 @@
 import express from 'express';
 import {
 	getGerentes,
+	createGerentes,
 	signin,
 	updateGerente,
 	deleteGerente,
@@ -12,13 +13,12 @@ const { body } = pkg;
 
 //localhost:5000/gerentes
 router.get('/', getGerentes);
+router.post('/signin', body('cedula').isNumeric({ no_symbols: true }), signin);
 router.post(
-	'/signin',
+	'/',
 	body('cedula').isNumeric({ no_symbols: true }),
-	auth,
-	signin
+	createGerentes
 );
-// router.post('/', body("cedula").isNumeric({no_symbols:true}),createGerentes);
 router.patch('/:id', updateGerente);
 router.delete('/:id', deleteGerente);
 

@@ -28,7 +28,6 @@ export const getGerentes = async (req, res) => {
 };*/
 
 export const signin = async (req, res) => {
-	if (!req.userId) return res.json({ message: 'Unauthenticated' });
 	const { cedula, contrasenia } = req.body;
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
@@ -61,26 +60,28 @@ export const signin = async (req, res) => {
 	}
 };
 
-// export const createGerentes = async (req,res) =>{
-//     const {cedula,nombre,contrasenia} = req.body;
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()){
-//         return res.status(400).json({errors: errors.array()});
-//     }
-//     try {
-//         const existingUser = await NuevoGerente.findOne({ cedula });
-// 		if (existingUser)
-// 			return res.status(400).json({ message: 'El usuario ya existe' });
-// 		console.log(cedula);
-//         const hashedPassword = await bcrypt.hash(contrasenia, 12);
-//         const creo = await NuevoGerente.create({
-//             cedula,nombre,contrasenia: hashedPassword
-//         });
-//         res.status(201).json({creo})
-//     } catch (error) {
-//         res.status(409).json({message: error.message});
-//     }
-// }
+export const createGerentes = async (req, res) => {
+	const { cedula, nombre, contrasenia } = req.body;
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(400).json({ errors: errors.array() });
+	}
+	try {
+		const existingUser = await NuevoGerente.findOne({ cedula });
+		if (existingUser)
+			return res.status(400).json({ message: 'El usuario ya existe' });
+		console.log(cedula);
+		const hashedPassword = await bcrypt.hash(contrasenia, 12);
+		const creo = await NuevoGerente.create({
+			cedula,
+			nombre,
+			contrasenia: hashedPassword,
+		});
+		res.status(201).json({ creo });
+	} catch (error) {
+		res.status(409).json({ message: error.message });
+	}
+};
 
 export const updateGerente = async (req, res) => {
 	if (!req.userId) return res.json({ message: 'Unauthenticated' });
